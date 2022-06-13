@@ -73,11 +73,11 @@
 
 # def moves(h):
 #     a, b = h
-#     return (a + 2, b), (a, b + 2), (a * 2, b), (a, b * 2)
+#     return (a + 1, b), (a, b + 1), (a * 2, b), (a, b * 2)
 
 # @lru_cache(None)
 # def f(h):
-#     if (sum(h) >= 122):
+#     if (sum(h) >= 144):
 #         return "END"
 #     elif (any(f(x) == "END" for x in moves(h))):
 #         return "П1"
@@ -89,7 +89,7 @@
 #         return "В2"
 
 # for i in range(1, 100):
-#     h = 2, i
+#     h = 3, i
 #     print(i, f(h))
 
 
@@ -123,16 +123,10 @@
 
 #         return node
 
-
-# node = Node((3, 30))
-
-# tree = Tree(node)
-
-# tree.create_tree()
-
-# tree.initional_node.__dict__
 import sys
 sys.setrecursionlimit(1000000)
+
+
 
 
 class Node:
@@ -157,53 +151,83 @@ class Tree:
         return node
 
     def fill_node(self, node: Node):
-        node.children.append(Node((node.value[0] + 2, node.value[1])))
+        node.children.append(Node((node.value[0] + 1, node.value[1])))
+        node.children.append(Node((node.value[0], node.value[1] + 1)))
         node.children.append(Node((node.value[0] * 2, node.value[1])))
-        node.children.append(Node((node.value[0], node.value[1] + 2)))
         node.children.append(Node((node.value[0], node.value[1] * 2)))
         return node
 
 
 
 class Game:
-    def __init__(self, condition) -> None:
+    def __init__(self, first_heep, condition) -> None:
         self.condition = condition
+        self.first_heep = first_heep
         self.first_task_answer = []
         self.second_task_answer = []
         self.third_task_answer = []
 
+    def first_task(self, counter, break_point=0):
+        if (counter >= break_point):
+            return self.first_task_answer
+        tree: Node = Tree().create_tree(Node((self.first_heep, counter))) 
+
+        p1_nodes = [p1 for p1 in tree.children]
+        if not any([self.condition(i.value) for i in p1_nodes]):
+            for p1 in p1_nodes:
+                w1_nodes = [w1 for w1 in p1.children]
+                if any([self.condition(i.value) for i in w1_nodes]):
+                    self.first_task_answer.append(counter)
+
+        return self.first_task(counter + 1, break_point)
+
     def second_task(self, counter, break_point=0):
-        if (counter <= break_point):
-            return self.second_task_answer[-2:]
+        if (counter >= break_point):
+            return sorted(list(set(self.second_task_answer)))
+        tree: Node = Tree().create_tree(Node((self.first_heep, counter))) 
 
-        tree: Node = Tree().create_tree(Node((3, counter))) 
-        
-        if any([self.condition(i.value) for i in tree.children]):
-            return self.second_task(counter - 1, break_point)
+        pretendent = ""
 
-        w1_lose_nodes = []
-        for p1_node in tree.children:
-            w1_nodes = [w1_node for w1_node in p1_node.children]
-            if not any([self.condition(i.value) for i in w1_nodes]):
-                w1_lose_nodes.append(w1_nodes) # двумерная матрица нод, которые ведут к проигрышу Вани
+        p1_nodes = [p1 for p1 in tree.children]
+        if not any([self.condition(i.value) for i in p1_nodes]):
+            # print("p1", [i.value for i in p1_nodes])
+            for p1 in p1_nodes:
+                w1_nodes = [w1 for w1 in p1.children]
+                if not any([self.condition(i.value) for i in w1_nodes]):
+                    c = 0
+                    for w1 in w1_nodes:
+                        p2_nodes = [p2 for p2 in w1.children]
+                        if any([self.condition(i.value) for i in p2_nodes]):
+                            c += 1
+                            pretendent = counter
+                    if (c == 4):
+                        self.second_task_answer.append(pretendent)
 
-        if not len(w1_lose_nodes):
-            return self.second_task(counter - 1, break_point)
-
-        for p1 in w1_lose_nodes:
-            for w1 in p1:
-                p2_win_variants = [p2 for p2 in w1.children]
-                if any( [self.condition(x.value) for x in p2_win_variants] ) == True:
-                    self.second_task_answer.append(counter)
-                    self.second_task_answer = sorted(list(set(self.second_task_answer)))
-
-        return self.second_task(counter - 1, break_point)
+        return self.second_task(counter + 1, break_point)
 
 def condition(value: tuple):
-    if (sum(value) >= 122):
+    if (value[1] * value[0] >= 144):
         return True
     return False
 
-game = Game(condition)
-print(game.second_task(100))
+game = Game(3, condition)
+# print(game.first_task(6, 100)) # range
+print(game.second_task(1, 100)) # range
 
+# def second_task_first_part(self, counter, break_point=0):
+#     tree: Node = Tree().create_tree(Node((self.first_heep, counter))) 
+#     if (counter >= break_point):
+#         return sorted(list(set(self.second_task_first_answer)))[:-1]
+#     p1_nodes = [p1 for p1 in tree.children]
+#     if not any([self.condition(i.value) for i in p1_nodes]):
+#         w1_all_nodes = []
+#         p2_all_nodes = []
+#         for p1 in p1_nodes:
+#             w1_all_nodes += [w1 for w1 in p1.children]
+#         if not any([self.condition(i.value) for i in w1_all_nodes]):
+#             for w1 in w1_all_nodes:
+#                 p2_all_nodes += [p2 for p2 in w1.children]
+#         if any([self.condition(p2.value) for p2 in p2_all_nodes]):
+#             self.second_task_first_answer.append(counter)
+
+#     return self.second_task_first_part(counter + 1, break_point)
