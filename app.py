@@ -211,7 +211,7 @@ def condition(value: tuple):
     return False
 
 game = Game(3, condition)
-# print(game.first_task(6, 100)) # range
+print(min(game.first_task(1, 100)))
 print(game.second_task(1, 100)) # range
 
 # def second_task_first_part(self, counter, break_point=0):
